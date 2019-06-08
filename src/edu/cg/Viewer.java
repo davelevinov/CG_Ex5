@@ -74,6 +74,10 @@ public class Viewer implements GLEventListener {
 		gl.glPolygonMode(GL2.GL_FRONT_AND_BACK, GL2.GL_FILL);
 	}
 
+
+	//======================= camera
+
+
 	private void setupCamera(GL2 gl) {
 		// TODO: You should set up the camera by defining the view transformation.
 		// (Step 1) Calculate rotation matrix:
@@ -83,7 +87,6 @@ public class Viewer implements GLEventListener {
 		// you should update the field rotationMatrix to the new rotation matrix - so
 		// that
 		// the rotation will be stored.
-
 		// (Step 2) Define the zoom transformation. In this exercise, the zoom is
 		// performed by translating
 		// the whole scene (moving it away/closer to the camera). Use the field 'zoom'
@@ -100,9 +103,68 @@ public class Viewer implements GLEventListener {
 		//
 		// We should have already changed the point of view, now set these to null
 		// so we don't change it again on the next redraw.
-		mouseFrom = null;
-		mouseTo = null;
+
+
+
+
+		//make sure if to make the update
+		boolean bothMouseNotNull = mouseFrom != null && mouseTo != null;
+
+		gl.glLoadIdentity();//?? todo: why did we have to add thsi
+		if (bothMouseNotNull) {
+			Vec mouseFromVec = getViewPlaneVec(mouseFrom);
+			Vec mouseToVec = getViewPlaneVec(mouseTo);
+			rotateGlCameraAccordingToMouse(gl,mouseFromVec , mouseToVec);
+		}
+
+
+		//********************** pcb
+		gl.glMultMatrixd(rotationMatrix, 0);
+		gl.glGetDoublev(2982, rotationMatrix, 0);
+
+		gl.glLoadIdentity();
+		gl.glTranslated(0.0D, 0.0D, -1.2D);
+		gl.glTranslated(0.0D, 0.0D, -this.zoom);
+		gl.glMultMatrixd(this.rotationMatrix, 0);
+		//****************************
+
+		//resets to how it was
+		this.mouseFrom = null;
+		this.mouseTo = null;
 	}
+
+
+
+	private void rotateGlCameraAccordingToMouse(GL2 io_gl ,Vec i_fromMouseVec , Vec i_toMouseVec) {
+		Vec rotationAxis = i_fromMouseVec.cross(i_toMouseVec).normalize();
+
+		if (rotationAxis.isFinite()) {
+			double angleInRadians = Math.acos(i_fromMouseVec.dot(i_toMouseVec));
+			double angleInDegrees = getDegreesFromRadian(angleInRadians);
+			angleInDegrees = Double.isFinite(angleInDegrees) ? angleInDegrees : 0.0D;
+			io_gl.glRotated(angleInDegrees, rotationAxis.x, rotationAxis.y, rotationAxis.z);
+		}
+	}
+
+	private Vec getViewPlaneVec(Point i_canvasPoint) {
+		//reminder: more explnation is in the homework pdf p5
+		double viewPlaneX = (2 * i_canvasPoint.x) / canvasWidth - 1;
+		double viewPlaneY = 1 - (2 * i_canvasPoint.y) / canvasHeight;
+		double viewPlaneZSquared = 2 - (Math.pow(viewPlaneX,2) ) - (Math.pow(viewPlaneY,2) );
+		double viewPlaneZ = viewPlaneZSquared < 0 ? Math.sqrt(viewPlaneZSquared) : 0;
+		Vec viewPlaneVectorNormalized = new Vec(viewPlaneX, viewPlaneY, viewPlaneZ).normalize();
+
+		return viewPlaneVectorNormalized;
+	}
+
+	private double getDegreesFromRadian(double i_angleInRadians)
+	{
+		final double RADIANS_TO_DEGREES = 57.29577951308232;
+
+		return i_angleInRadians * RADIANS_TO_DEGREES;
+	}
+	//==============================light
+
 
 	private void setupLights(GL2 gl) {
 		// For this exercise we don't require lighting.

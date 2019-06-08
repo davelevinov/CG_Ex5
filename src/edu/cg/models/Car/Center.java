@@ -45,7 +45,7 @@ public class Center implements IRenderable {
 		Materials.SetBlackMetalMaterial(gl);
 		gl.glPushMatrix();
 		gl.glTranslated(-0.03125D, 0.013125000000000001D, 0.0D);
-		this.backBox.render(gl);
+	//	this.backBox.render(gl); todo: reput this in
 		gl.glPopMatrix();
 	}
 
